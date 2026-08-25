@@ -1,0 +1,16 @@
+{
+  "undergryd-software-engineer": {
+    "npub": "npub1REPLACE_WITH_MINTED_KEY",
+    "pubkey_hex": "REPLACE_WITH_64_CHAR_HEX_PUBKEY",
+    "did:key": "did:key:zREPLACE",
+    "dids": [],
+    "display": "Undergryd Software Engineer"
+  },
+  "avatar-builder": {
+    "npub": "npub1REPLACE_WITH_MINTED_KEY",
+    "pubkey_hex": "REPLACE_WITH_64_CHAR_HEX_PUBKEY",
+    "did:key": "did:key:zREPLACE",
+    "dids": [],
+    "display": "Avatar Builder"
+  }
+}
