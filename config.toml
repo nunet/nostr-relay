@@ -1,0 +1,33 @@
+# nostr-rs-relay -- CLOSED internal relay for the avatar mailbox fabric.
+# Reference: https://github.com/scsibug/nostr-rs-relay/blob/master/config.toml
+
+[info]
+name = "nunet-avatar-mailbox"
+description = "Internal store-and-forward relay for NuNet avatar messaging (closed set)."
+# pubkey/contact optional.
+
+[database]
+engine = "sqlite"
+data_directory = "/usr/src/app/db"
+
+[network]
+address = "0.0.0.0"
+port = 8080
+
+[options]
+reject_future_seconds = 1800
+
+[limits]
+# Small closed set; keep generous but bounded.
+messages_per_sec = 50
+max_event_bytes = 131072      # 128 KiB message bodies
+max_ws_message_bytes = 262144
+max_ws_frame_bytes = 262144
+
+[authorization]
+# CLOSED SET: only accept events signed by known avatar pubkeys. avatar-builder fills this
+# with every avatar's minted pubkey_hex (same values as registry.json pubkey_hex). An
+# empty/absent list accepts all — do NOT ship empty for the shared relay.
+pubkey_whitelist = [
+  # "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+]
