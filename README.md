@@ -14,7 +14,7 @@ config + the shared identity registry.
 |---|---|
 | `docker-compose.yml` | runs `nostr-rs-relay`, creates the shared `nostr-mailbox-net` network + a persistent DB volume |
 | `config.toml` | closed-relay config — a **pubkey allowlist** of the fleet's avatars (no open registration) |
-| `registry.example.json` | the shared **contacts/identity** map format (`name → {npub, pubkey_hex, did:key, dids[], display}`); the live `registry.json` lives here and is read-only-mounted into every mailbox |
+| `registry.example.json` | the **contacts/identity** map format (`name → {npub, pubkey_hex, did:key, dids[], display}`). Each avatar carries its own writable copy, generated from `pass` by `nostr-mailbox`'s `scripts/build-registry` — nothing is mounted from here |
 | `MAINTAINER.md` | operator runbook: mint a keypair per avatar → `pass`, publish public parts to `registry.json`, pin the pubkey in the allowlist |
 
 ## Why it is separate from `nostr-mailbox`
@@ -32,5 +32,6 @@ docker compose -f docker-compose.yml up -d
 ```
 
 Creates the always-on relay + the shared external network `nostr-mailbox-net` that every
-avatar's `nostr-mailbox` joins. Fill `config.toml`'s `pubkey_whitelist` and the live
-`registry.json` from minted keys per `MAINTAINER.md`.
+avatar's `nostr-mailbox` joins. Fill `config.toml`'s `pubkey_whitelist` from the minted
+keys per `MAINTAINER.md` — that allowlist is this relay's access control. The address book
+(`registry.json`) is not deployed from here; each avatar carries its own copy.

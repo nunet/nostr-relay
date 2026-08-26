@@ -5,8 +5,8 @@
 # Off-the-shelf nostr-rs-relay; we run it, we don't fork it (it ignores our content).
 # Closed set: config.toml pins a pubkey allowlist (fill with the avatars' minted pubkeys).
 #
-# Bring up ONCE on the host:
-#   docker compose -f tools/nostr-relay/docker-compose.yml up -d
+# Bring up ONCE on the host, from this repo:
+#   docker compose up -d
 # It creates the shared external network `nostr-mailbox-net` that every mailbox joins.
 services:
   nostr-relay:
