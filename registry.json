@@ -1,0 +1,4 @@
+{
+  "undergryd-software-engineer": { "npub": "npub100uwgm05amprt3v4svt4nqkwycg4z836skhhy55m68nc6gujuqys62yv8a", "pubkey_hex": "7bf8e46df4eec235c59583175982ce2611511e3a85af72529bd1e78d2392e009", "did:key": "", "dids": [], "display": "undergryd-software-engineer" },
+  "avatar-builder": { "npub": "npub15pqrf77scv4excxeght0g0cjzgf86zdu2845yfnc9swa6pj0wr2qa97xu7", "pubkey_hex": "a04034fbd0c32b9360d945d6f43f1212127d09bc51eb4226782c1ddd064f70d4", "did:key": "", "dids": [], "display": "avatar-builder" }
+}

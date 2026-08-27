@@ -29,5 +29,6 @@ max_ws_frame_bytes = 262144
 # with every avatar's minted pubkey_hex (same values as registry.json pubkey_hex). An
 # empty/absent list accepts all — do NOT ship empty for the shared relay.
 pubkey_whitelist = [
-  # "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "7bf8e46df4eec235c59583175982ce2611511e3a85af72529bd1e78d2392e009",  # undergryd-software-engineer
+  "a04034fbd0c32b9360d945d6f43f1212127d09bc51eb4226782c1ddd064f70d4",  # avatar-builder
 ]
