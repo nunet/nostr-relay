@@ -5,6 +5,28 @@ avatar, stores the private key in `pass`, and publishes the public parts to
 `registry.json`. avatar-builder wires the shared relay + network + injection. This file is
 the command block to run **on the host** (not by an agent).
 
+## One command
+
+Everything below is wrapped in one script, so provisioning is never assembled from
+snippets:
+
+```sh
+cd <your-path>/applications/tools/nostr-relay
+scripts/provision undergryd-software-engineer avatar-builder          # steps 3-5
+scripts/provision --mint undergryd-software-engineer avatar-builder   # steps 1 + 3-5
+```
+
+It builds the address book, writes the relay allowlist, and brings the relay and
+the shared network up — reading every key from `pass`, so nothing is retyped or
+read off a screen. `--mint` is opt-in because **minting replaces an avatar's
+keys**, and an avatar already published then has to be republished.
+
+Step 2 (the avatar's `harness/config` lines) is the one part the script does not
+do: it edits an avatar repo, which is avatar-builder's side.
+
+The sections below are what it runs, in order — read them to understand it, or to
+do a step by hand.
+
 ## 1. Mint a keypair per avatar
 
 `nostr-mailbox` ships a script that mints and stores in one step. It needs only **docker
@@ -15,17 +37,24 @@ cd <your-path>/applications/tools/nostr-mailbox
 scripts/mint-avatar-keys undergryd-software-engineer avatar-builder
 ```
 
-Per avatar it writes two `pass` entries —
+Per avatar it writes **four** `pass` entries — the whole identity lives in `pass`,
+nothing about it is left on a screen:
 
 | entry | what |
 |---|---|
 | `nunet/avatars/<avatar>/nostr-nsec` | the private key (64-char hex; the container also accepts `nsec1…`) |
+| `nunet/avatars/<avatar>/nostr-pubkey-hex` | the public key → the relay `pubkey_whitelist` |
+| `nunet/avatars/<avatar>/nostr-npub` | the public key, bech32 → `registry.json` |
 | `nunet/avatars/<avatar>/mailbox-api-token` | the bearer token between that avatar's `mailbox` CLI and its own container |
 
-— and prints `pubkey_hex` and `npub`, which are what steps 3 and 4 need. **The private key
-is never printed**: it goes container stdout → `pass` stdin, so it reaches neither the
-screen, scrollback, nor shell history. `PASS_PREFIX` (default `nunet/avatars`) overrides
-the store layout.
+The public parts are echoed as well, but **only for reassurance** — steps 3 and 4
+read them back out of `pass`, so there is never a reason to copy one from
+scrollback. **The private key is never printed**: it goes container stdout →
+`pass` stdin, reaching neither screen, scrollback, nor shell history. `PASS_PREFIX`
+(default `nunet/avatars`) overrides the store layout.
+
+An avatar minted before the public halves were stored has only two entries;
+re-running the script gives it all four — and a new keypair with them.
 
 <details>
 <summary>By hand instead, with <code>nak</code></summary>
@@ -88,15 +117,18 @@ swapped key fails loud instead of misdelivering silently.
 
 ## 4. Pin the pubkey in the relay allowlist
 
-Add each avatar's `pubkey_hex` to `pubkey_whitelist` in `config.toml`, then restart the
-relay (`docker compose restart` in this repo). Closed set = no spam/discovery problem
-internally. The lines come out of `pass` too:
+`scripts/sync-allowlist` writes `pubkey_whitelist` in `config.toml` from the keys in
+`pass`, then you restart the relay (`docker compose restart` in this repo). Closed
+set = no spam/discovery problem internally.
 
 ```sh
-for a in undergryd-software-engineer avatar-builder; do
-    printf '  "%s",\n' "$(pass show "nunet/avatars/$a/nostr-pubkey-hex" | head -1)"
-done
+scripts/sync-allowlist undergryd-software-engineer avatar-builder
 ```
+
+It rewrites that block in place and leaves the rest of `config.toml` alone, so it
+is safe to re-run whenever the fleet gains a member. It refuses if an avatar has
+no key in `pass` rather than writing a short list — a silently short allowlist
+locks an avatar out with a confusing error at the relay.
 
 Unlike the address book, this one **is** access control — it is what the relay enforces
 before accepting an event, and it lives with the relay because the relay is what reads

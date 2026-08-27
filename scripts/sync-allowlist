@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Write the relay's pubkey_whitelist from the keys already in pass.
+#
+#   scripts/sync-allowlist <avatar> [avatar...]
+#
+# The allowlist IS access control -- the relay enforces it before accepting an
+# event -- so it lives here, with the relay that reads it. The keys come from
+# pass, never from a screen or shell history: mint-avatar-keys stored the public
+# halves there precisely so nothing has to be retyped.
+#
+# Idempotent: rewrites the pubkey_whitelist block in place and leaves the rest of
+# config.toml untouched. Restart the relay afterwards to load it.
+set -euo pipefail
+
+PASS_PREFIX="${PASS_PREFIX:-nunet/avatars}"
+CONF="${CONF:-$(cd "$(dirname "$0")/.." && pwd)/config.toml}"
+
+[ $# -gt 0 ] || { echo "usage: $(basename "$0") <avatar> [avatar...]" >&2; exit 2; }
+[ -f "$CONF" ] || { echo "sync-allowlist: no config.toml at $CONF" >&2; exit 1; }
+
+block=""
+for avatar in "$@"; do
+    hex=$(pass show "$PASS_PREFIX/$avatar/nostr-pubkey-hex" 2>/dev/null | head -1) || true
+    [ -n "$hex" ] || { echo "sync-allowlist: no $PASS_PREFIX/$avatar/nostr-pubkey-hex in pass -- mint first" >&2; exit 1; }
+    block+="  \"$hex\",  # $avatar"$'\n'
+done
+
+tmp=$(mktemp); trap 'rm -f "$tmp"' EXIT
+awk -v block="$block" '
+    /^pubkey_whitelist[[:space:]]*=[[:space:]]*\[/ { print; printf "%s", block; skip=1; next }
+    skip && /^\]/                                  { print; skip=0; next }
+    !skip                                          { print }
+' "$CONF" > "$tmp"
+
+grep -q '^pubkey_whitelist' "$tmp" || { echo "sync-allowlist: pubkey_whitelist not found in $CONF" >&2; exit 1; }
+cat "$tmp" > "$CONF"
+echo "sync-allowlist: $# key(s) written to $CONF -- restart the relay: docker compose restart"

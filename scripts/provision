@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Provision the fleet's nostr messaging in one command. MAINTAINER-run, host-side.
+#
+#   scripts/provision [--mint] <avatar> [avatar...]
+#
+#   --mint   mint fresh keypairs first. OFF by default: minting REPLACES an
+#            avatar's keys, and an avatar already published must then be
+#            republished or its mailbox refuses to start.
+#
+# Runs the recorded order (MAINTAINER.md) so nobody assembles it from snippets:
+#   1. (--mint) mint-avatar-keys  -- writes nsec + pubkey-hex + npub + api-token to pass
+#   2. build-registry             -- the address book, from the PUBLIC entries in pass
+#   3. sync-allowlist             -- the relay's access control, from the same entries
+#   4. docker compose up -d       -- relay + the shared nostr-mailbox-net
+#
+# Every key comes from pass. Nothing is retyped, nothing is read off a screen.
+# Needs docker and pass; no Go toolchain (keygen runs in a throwaway container).
+set -euo pipefail
+
+HERE="$(cd "$(dirname "$0")/.." && pwd)"
+MAILBOX_REPO="${MAILBOX_REPO:-$(cd "$HERE/.." && pwd)/nostr-mailbox}"
+MINT=0
+[ "${1:-}" = "--mint" ] && { MINT=1; shift; }
+[ $# -gt 0 ] || { echo "usage: $(basename "$0") [--mint] <avatar> [avatar...]" >&2; exit 2; }
+[ -x "$MAILBOX_REPO/scripts/build-registry" ] || {
+    echo "provision: no nostr-mailbox repo at $MAILBOX_REPO (set MAILBOX_REPO)" >&2; exit 1; }
+
+if (( MINT )); then
+    echo "== 1. minting keypairs into pass (REPLACES any existing keys)"
+    "$MAILBOX_REPO/scripts/mint-avatar-keys" "$@"
+else
+    echo "== 1. minting skipped (--mint to replace keys)"
+fi
+
+echo "== 2. address book -> $HERE/registry.json"
+"$MAILBOX_REPO/scripts/build-registry" "$@" > "$HERE/registry.json"
+
+echo "== 3. relay allowlist"
+"$HERE/scripts/sync-allowlist" "$@"
+
+echo "== 4. relay + shared network"
+( cd "$HERE" && docker compose up -d )
+
+echo ""
+echo "  registry.json is the master copy; each avatar gets its own copy at"
+echo "  materialization time. Next: avatar-builder installs tools/nostr-mailbox."
