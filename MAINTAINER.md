@@ -21,8 +21,9 @@ the shared network up — reading every key from `pass`, so nothing is retyped o
 read off a screen. `--mint` is opt-in because **minting replaces an avatar's
 keys**, and an avatar already published then has to be republished.
 
-Step 2 (the avatar's `harness/config` lines) is the one part the script does not
-do: it edits an avatar repo, which is avatar-builder's side.
+Step 2 (the avatar's own secret declarations) is the one part the script does not
+do: it edits an avatar repo, which is avatar-builder's side. Step 6 — starting
+each avatar's mailbox — is deliberately separate too; see that section.
 
 The sections below are what it runs, in order — read them to understand it, or to
 do a step by hand.
@@ -76,19 +77,46 @@ The secret is on screen this way, so clear the scrollback afterwards.
 `did:key` from the same secp256k1 pubkey (multikey `zQ3s…`, `0x2701` prefix) — derive with
 the project's DID tool, or leave `did:key` blank in v1 and fill at nuActor integration.
 
-## 2. Wire the secrets into the avatar's `harness/config`
+## 2. Declare the secrets — in two different places, on purpose
 
-Two lines in that avatar's `SANDBOX_SECRETS`, so `launch` resolves them from `pass` at
-start and exports them — the folded `tools/nostr-mailbox` compose reads them from the same
-shell:
+The avatar's two mailbox secrets are wired in **separately**, and the split is the
+whole point.
+
+**The API token** goes in that avatar's `harness/config` `SANDBOX_SECRETS`, so `launch`
+resolves it from `pass` at start and injects it into the agent — the agent's `mailbox`
+CLI needs it to talk to its own mailbox:
 
 ```sh
-"NOSTR_MAILBOX_NSEC=pass:nunet/avatars/<avatar>/nostr-nsec"
 "MAILBOX_API_TOKEN=pass:nunet/avatars/<avatar>/mailbox-api-token"
 ```
 
-`MAILBOX_API_TOKEN` is **per avatar**, shared between that avatar's sandbox and that
-avatar's mailbox container — it is not one fleet-wide value.
+It is **per avatar**, shared between that avatar's sandbox and that avatar's mailbox
+container — not one fleet-wide value. It authorizes calls to a local HTTP API and
+signs nothing.
+
+**The signing key must NEVER appear in `SANDBOX_SECRETS`.** That list is injected into
+the *agent's* container, so an entry there leaves the avatar's private key readable by
+the LLM for an entire session — the exact opposite of the property this fabric exists
+to provide. It is not hypothetical: it is what happened, and the key was confirmed
+present in a running agent's environment on 2026-08-28.
+
+Instead the key is named in the avatar's `tools/nostr-mailbox/config`, which
+`mailboxctl` sources on the **host** and hands to the mailbox container alone:
+
+```sh
+: "${PASS_PREFIX:=nunet/avatars}"
+: "${MAILBOX_NSEC_PASS_PATH:=$PASS_PREFIX/$MAILBOX_AVATAR/nostr-nsec}"
+: "${MAILBOX_TOKEN_PASS_PATH:=$PASS_PREFIX/$MAILBOX_AVATAR/mailbox-api-token}"
+```
+
+Those are the defaults, so an avatar using the standard `pass` layout needs no edit at
+all. Nothing in that file is a secret — they are paths *into* `pass`, not values out of
+it.
+
+| secret | declared in | reaches |
+|---|---|---|
+| `NOSTR_MAILBOX_NSEC` | `tools/nostr-mailbox/config` | the mailbox container **only** |
+| `MAILBOX_API_TOKEN` | `harness/config` **and** the above | the agent **and** the mailbox |
 
 ## 3. Build the address book
 
@@ -134,6 +162,13 @@ Unlike the address book, this one **is** access control — it is what the relay
 before accepting an event, and it lives with the relay because the relay is what reads
 it.
 
+`config.toml` is read **only at relay start**, so a change here means a restart. To
+check whether the running relay is actually carrying the current allowlist — rather
+than assuming — `scripts/fleet-keys status` prints an `in relay` column per avatar.
+`fleet-keys publish` does steps 3 and 4 across the whole fleet at once, which is what
+you want when an identity changes: every avatar holds its own copy of the address
+book, and missing one fails silently.
+
 ## 5. Bring up the shared relay (once)
 
 ```sh
@@ -146,12 +181,29 @@ avatar's mailbox joins.
 
 ## 6. Per-avatar mailbox
 
-The avatar's own `launch` brings up its materialized copy of
-`tools/nostr-mailbox/docker-compose.yml` (dual-homed: avatar net + `nostr-mailbox-net`)
-with the injected secrets from step 2. The component is project-neutral, so the avatar's
-copy is where `MAILBOX_AVATAR` and the three host paths — its `inbox/`, its `outbox/`, and
-the shared `registry.json` — get their real values. Install the `mailbox` CLI skill in the
-avatar too.
+The mailbox is **its own compose project**, started by hand from the avatar — *not* part
+of the avatar's stack:
+
+```sh
+cd <avatar>/tools/nostr-mailbox
+./mailboxctl build     # explicit; `up` never builds
+./mailboxctl up        # needs the avatar's network and the relay's to exist
+./mailboxctl status
+```
+
+Its compose file is called `mailbox.compose.yml`, and that name is load-bearing: a
+harness folds every `tools/*/docker-compose.yml` in an avatar into the **agent's** own
+compose invocation, and under that name two of the mailbox's properties became boot
+blockers for the agent — an `external` network (compose validates those before starting
+anything, so a relay that was down failed the whole stack) and a Go build context (a
+compile error became an avatar boot error). Mail is not on the critical path of an agent
+starting up, so every dependency now points *from* the mailbox *to* what it needs and
+never back. A mailbox that is broken, absent or mid-rebuild is invisible to the agent.
+
+**Nothing in the avatar's copy needs editing.** `mailboxctl` derives `AVATAR_ROOT` from
+its own location and `MAILBOX_AVATAR` from the avatar's `harness/config`, so the copy
+stays byte-identical to the component and cannot fork at the edge. Install the `mailbox`
+CLI skill in the avatar too.
 
 The container runs as the **host user**: its image is built with `MAILBOX_UID`/`MAILBOX_GID`
 build args (the harness's `HOST_UID`/`HOST_GID`) so the `inbox/`/`outbox/` binds are
