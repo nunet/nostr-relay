@@ -46,13 +46,16 @@ other avatar's directory and restarting every mailbox. Miss one and the failure 
 silent — that avatar cannot verify or address the changed one, with no error until
 someone sends mail.
 
-`scripts/fleet-keys` owns that fan-out and the ordering.
+`scripts/mailbox-fleet` owns that fan-out and the ordering — run it with no arguments for a menu that lists every avatar's state and acts on it.
 
 ```bash
-scripts/fleet-keys status               # what pass, the relay and each avatar hold
-scripts/fleet-keys publish --check      # what would change; writes nothing
-scripts/fleet-keys publish              # allowlist + every avatar's registry.json
-scripts/fleet-keys rotate <avatar>...   # mint NEW keys for these, then publish
+scripts/mailbox-fleet                    # menu: state of every avatar, and act on it
+scripts/mailbox-fleet status             # what pass, the relay and each avatar hold
+scripts/mailbox-fleet install [NAME...]  # put the mailbox component on avatars
+scripts/mailbox-fleet publish --check    # what would change; writes nothing
+scripts/mailbox-fleet publish            # install + allowlist + every registry.json
+scripts/mailbox-fleet rotate <avatar>... # mint NEW keys for these, then publish
+scripts/mailbox-fleet relay-restart      # load a changed allowlist
 ```
 
 The avatar list comes from the same `name = directory` map `sync-fleet` reads —
