@@ -164,10 +164,12 @@ it.
 
 `config.toml` is read **only at relay start**, so a change here means a restart. To
 check whether the running relay is actually carrying the current allowlist — rather
-than assuming — `scripts/mailbox-fleet` prints an `in relay` column per avatar, in a
-menu that is also how you act on it. It does steps 3, 4 and 6 across the whole fleet
-at once, which is what you want when an identity changes: every avatar holds its own
-copy of the address book, and missing one fails silently.
+than assuming — `harness-core/fleet mailbox` prints an `in relay` column per avatar,
+in a menu that is also how you act on it. It does steps 3, 4 and 6 across the whole
+fleet at once, which is what you want when an identity changes: every avatar holds
+its own copy of the address book, and missing one fails silently. It lives in
+harness-core because it needs the fleet map; this repo keeps only what the relay
+itself needs.
 
 ## 5. Bring up the shared relay (once)
 

@@ -46,21 +46,28 @@ other avatar's directory and restarting every mailbox. Miss one and the failure 
 silent — that avatar cannot verify or address the changed one, with no error until
 someone sends mail.
 
-`scripts/mailbox-fleet` owns that fan-out and the ordering — run it with no arguments for a menu that lists every avatar's state and acts on it.
+That fan-out is **not this component's job**: it needs to know which avatars exist
+and where they live, and that is harness-core's, which owns `avatars.conf`. Run it
+from there:
 
-```bash
-scripts/mailbox-fleet                    # menu: state of every avatar, and act on it
-scripts/mailbox-fleet status             # what pass, the relay and each avatar hold
-scripts/mailbox-fleet install [NAME...]  # put the mailbox component on avatars
-scripts/mailbox-fleet publish --check    # what would change; writes nothing
-scripts/mailbox-fleet publish            # install + allowlist + every registry.json
-scripts/mailbox-fleet rotate <avatar>... # mint NEW keys for these, then publish
-scripts/mailbox-fleet relay-restart      # load a changed allowlist
+```sh
+cd <your-path>/applications/agent-sources/harness-core
+./fleet mailbox          # menu: every avatar's state, and act on it
 ```
 
-The avatar list comes from the same `name = directory` map `sync-fleet` reads —
-`$AGENT_FLEET_FILE`, or `--fleet FILE` — so where avatars live is maintained once
-rather than in two files that drift.
+It reaches back into this repo for `scripts/sync-allowlist` and `config.toml`, which
+is the right direction: harness-core knows the fleet, a component knows its own
+files. This repo never needs to know where an avatar is.
+
+## What stays here
+
+| | |
+|---|---|
+| `config.toml` | the relay's config, including the `pubkey_whitelist` it enforces |
+| `docker-compose.yml` | the relay itself and the shared `nostr-mailbox-net` |
+| `scripts/sync-allowlist` | write that whitelist from the keys in `pass` |
+| `scripts/provision` | first-time setup of relay + network |
+| `MAINTAINER.md` | the runbook for minting and publishing identities |
 
 **`rotate` always publishes, and cannot be dry-run.** Minting without publishing
 leaves the fleet broken: `mint-avatar-keys` overwrites all four `pass` entries, and
