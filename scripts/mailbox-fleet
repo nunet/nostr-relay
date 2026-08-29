@@ -71,6 +71,13 @@ command -v pass >/dev/null || die "'pass' is not installed on this host"
 # ------------------------------------------------------------------- fleet ---
 declare -a NAMES=(); declare -A DIROF=()
 load_fleet() {
+    # The map lives with harness-core, which sits beside this repo's parent in the
+    # applications tree. Look there before asking: needing an env var to run a menu
+    # is the kind of friction that sends people back to copying paths by hand.
+    if [[ -z "$FLEET_FILE" ]]; then
+        local guess="$RELAY_REPO/../../agent-sources/harness-core/avatars.conf"
+        [[ -f "$guess" ]] && FLEET_FILE="$(cd "$(dirname "$guess")" && pwd)/$(basename "$guess")"
+    fi
     [[ -n "$FLEET_FILE" ]] || die "no avatar map: --fleet FILE, or set AGENT_FLEET_FILE (the same name=directory file sync-fleet reads)"
     [[ -f "$FLEET_FILE" ]] || die "no such fleet file: $FLEET_FILE"
     local line name dir
