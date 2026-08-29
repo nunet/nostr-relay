@@ -30,8 +30,10 @@ do a step by hand.
 
 ## 1. Mint a keypair per avatar
 
-`nostr-mailbox` ships a script that mints and stores in one step. It needs only **docker
-and `pass`** on the host — no Go toolchain, no extra CLI:
+`nostr-mailbox` ships a script that mints and stores in one step. It needs `pass`, and
+either **`nak` on the host or docker** — no Go toolchain either way. Without a host
+`nak`, docker runs it straight from its module path at the same commit the harness
+image builds, so the minting side and the running side cannot be different code:
 
 ```sh
 cd <your-path>/applications/tools/nostr-mailbox
@@ -49,9 +51,9 @@ nothing about it is left on a screen:
 
 The public parts are echoed as well, but **only for reassurance** — steps 3 and 4
 read them back out of `pass`, so there is never a reason to copy one from
-scrollback. **The private key is never printed**: it goes container stdout →
-`pass` stdin, reaching neither screen, scrollback, nor shell history. `PASS_PREFIX`
-(default `nunet/avatars`) overrides the store layout.
+scrollback. **The private key is never printed**: it stays in a shell variable and
+goes to `pass` on stdin, reaching neither screen, scrollback, shell history, nor any
+process's argv. `PASS_PREFIX` (default `nunet/avatars`) overrides the store layout.
 
 An avatar minted before the public halves were stored has only the key itself;
 re-running the script gives it all three — and a new keypair with them.
