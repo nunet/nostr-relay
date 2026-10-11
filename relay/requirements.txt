@@ -1,0 +1,4 @@
+# Pinned: the relay is ~400 lines on top of these two, and both are on the
+# security path (the websocket parser and the signature check).
+websockets==13.1
+coincurve==20.0.0

@@ -1,0 +1,4 @@
+# TLS for the gated relay. Websocket upgrades pass through reverse_proxy as-is.
+{$RELAY_DOMAIN} {
+	reverse_proxy nostr-relay:8080
+}

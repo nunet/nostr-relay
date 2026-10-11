@@ -1,5 +1,8 @@
-# nostr-rs-relay -- CLOSED internal relay for the avatar mailbox fabric.
-# Reference: https://github.com/scsibug/nostr-rs-relay/blob/master/config.toml
+# gated-relay (relay/) -- the CLOSED relay for the avatar mailbox fabric. Closed both
+# ways: a connection must sign in (NIP-42) with a key below to publish OR read, and a
+# key reads only events it wrote or that name it. The file is re-read when it changes.
+# (The layout is nostr-rs-relay's, which this replaced; sections it does not read, like
+# [database], are kept so the file stays valid for either.)
 
 [info]
 name = "nunet-avatar-mailbox"
@@ -24,10 +27,18 @@ max_event_bytes = 131072      # 128 KiB message bodies
 max_ws_message_bytes = 262144
 max_ws_frame_bytes = 262144
 
+[gate]
+# The relay URLs a client may name when it signs in (NIP-42's `relay` tag). A client
+# names the URL it dialled, so list every one this relay is reached by: the internal
+# name local avatars use, and -- on a public deployment -- wss://<RELAY_DOMAIN>.
+relay_urls = [
+  "ws://nostr-relay:8080",
+]
+
 [authorization]
-# CLOSED SET: only accept events signed by known avatar pubkeys. avatar-builder fills this
-# with every avatar's minted pubkey_hex (same values as registry.json pubkey_hex). An
-# empty/absent list accepts all — do NOT ship empty for the shared relay.
+# CLOSED SET: only these keys may sign in -- to publish or to read. scripts/sync-allowlist
+# (via `./fleet mailbox publish`) fills it from pass. An empty list admits NOBODY, and an
+# edit takes effect without a restart.
 pubkey_whitelist = [
   "0cc011fe5f6e26106999db8cfefae9e1670b72f16c4065dc36a8ff76d56016ee",  # agent-hub-design
   "46d8c691d4ae677a1733c38960ac2f6c169e78f52038cd3fc42510d743256903",  # undergryd-ai-co-ceo

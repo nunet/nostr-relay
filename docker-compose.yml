@@ -1,26 +1,28 @@
-# Shared Nostr relay -- ALWAYS-ON, cross-avatar. Provisioned by avatar-builder, NOT tied
-# to any one avatar's launch. It is the store-and-forward buffer: it persists messages so
-# a recipient whose mailbox was down gets them on next start.
+# Shared Nostr relay -- ALWAYS-ON, cross-avatar. Provisioned by the operator, NOT tied
+# to any one avatar's launch. It is the store-and-forward buffer: it holds messages
+# until each recipient fetches them.
 #
-# Off-the-shelf nostr-rs-relay; we run it, we don't fork it (it ignores our content).
-# Closed set: config.toml pins a pubkey allowlist (fill with the avatars' minted pubkeys).
+# gated-relay (relay/): closed in BOTH directions. Every connection must sign in
+# (NIP-42) with a key on config.toml's pubkey_whitelist before it may publish or read,
+# and a key reads only events it wrote or that name it. That is what lets the same
+# relay sit on a public address -- see docker-compose.public.yml.
 #
 # Bring up ONCE on the host, from this repo:
-#   docker compose up -d
-# It creates the shared external network `nostr-mailbox-net` that every mailbox joins.
+#   docker compose up -d --build
+# It creates the shared external network `nostr-mailbox-net` that local avatars join.
 services:
   nostr-relay:
-    image: scsibug/nostr-rs-relay:latest
+    build: ./relay
+    image: nunet-gated-relay:local
     container_name: nostr-relay
     init: true
     volumes:
+      # Read-only, and re-read on change: sync-allowlist edits it, no restart needed.
       - ./config.toml:/usr/src/app/config.toml:ro
       - relay-db:/usr/src/app/db
     restart: unless-stopped
     networks:
       - relay
-    # Optional host port for debugging only; internal traffic uses the network.
-    # ports: ["127.0.0.1:7000:8080"]
 
 volumes:
   relay-db:
