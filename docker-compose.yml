@@ -11,6 +11,20 @@
 #   docker compose up -d --build
 # It creates the shared external network `nostr-mailbox-net` that local avatars join.
 services:
+  # One-shot, as root, before every relay start: hand the db volume to the relay's uid.
+  # A volume keeps the owner it was first created with, so one inherited from
+  # nostr-rs-relay (uid 1000) left the relay crash-looping on "unable to open database
+  # file". Top directory only: files already in it keep their owner.
+  relay-db-owner:
+    build: ./relay
+    image: nunet-gated-relay:local
+    user: "0"
+    entrypoint: ["chown", "10001", "/usr/src/app/db"]
+    volumes:
+      - relay-db:/usr/src/app/db
+    network_mode: none
+    restart: "no"
+
   nostr-relay:
     build: ./relay
     image: nunet-gated-relay:local
@@ -21,6 +35,9 @@ services:
       - ./config.toml:/usr/src/app/config.toml:ro
       - relay-db:/usr/src/app/db
     restart: unless-stopped
+    depends_on:
+      relay-db-owner:
+        condition: service_completed_successfully
     networks:
       - relay
 
