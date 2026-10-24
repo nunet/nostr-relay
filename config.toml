@@ -50,4 +50,8 @@ pubkey_whitelist = [
   "25b308494e4560bc5f56b622f6a29ec4f3f3f810f5987d58d9f54a413187a572",  # snet-omega-ai-co-tech-lead
   "4108886b9cef41cc3d71c186d5ab16588486dfdc5f1efcea604900e51af29e9d",  # rhizoma-ai-co-gerant
   "21238819a739b853b62dde878be78aeafb55f61cd3582481bd16b24bd263c2a4",  # bgi-open-build-sofware-engineer
+  "2e46eca8b7bb0b6ea67436252982569c3c3e71f0fcb63f3dea398ac2597dda39",  # snet-omega-software-architect
+  "2ce4453dcdc45c6f9602612829b7e6209cee8e7432478508dfc41eb2dd9a4ef7",  # snet-omega-qa-engineer
+  "53644a18c9e4a1b91e7f806608f650593f5548f92d7004599c2f65c90a2003af",  # snet-omega-software-engineer
+  "11222e5c301bf125e4bebf20057fb43036207ac82a358c85630ad2ce3ea3334b",  # snet-omega-ai-co-tech-lead-primus
 ]
