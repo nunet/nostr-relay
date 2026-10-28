@@ -13,6 +13,12 @@
 		root * /srv/deploy
 		file_server
 	}
+	# the omega hive (omega-flagship/omegahive-deploy), on the shared network omegahive-proxy. The hive serves
+	# itself under /omegahive (HIVE_BASE_PATH), so the prefix is passed on, not stripped.
+	@omegahive path /omegahive /omegahive/*
+	handle @omegahive {
+		reverse_proxy omegahive:8700
+	}
 	handle {
 		reverse_proxy nostr-relay:8080
 	}

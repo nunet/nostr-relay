@@ -21,9 +21,16 @@ services:
       - caddy-data:/data
       # the deploy workflow's state directory (deployed.json); DEPLOY_STATE_DIR is exported by the deploy
       - ${DEPLOY_STATE_DIR:-./deploy-state}:/srv/deploy:ro
-    networks: [relay]
+    # omegahive-proxy: Caddy and the omega hive only, nothing else may join (the hive treats a request without a
+    # proxy header as local; omegahive-deploy's cutover.sh refuses a third container). The hive's compose
+    # declares it external.
+    networks: [relay, omegahive-proxy]
     depends_on: [nostr-relay]
 
 volumes:
   caddy-data:
     name: nostr-relay-caddy-data
+
+networks:
+  omegahive-proxy:
+    name: omegahive-proxy
