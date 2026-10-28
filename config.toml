@@ -47,6 +47,10 @@ pubkey_whitelist = [
   "2ce4453dcdc45c6f9602612829b7e6209cee8e7432478508dfc41eb2dd9a4ef7",  # snet-omega-qa-engineer
   "53644a18c9e4a1b91e7f806608f650593f5548f92d7004599c2f65c90a2003af",  # snet-omega-software-engineer
   "11222e5c301bf125e4bebf20057fb43036207ac82a358c85630ad2ce3ea3334b",  # snet-omega-ai-co-tech-lead-primus
+  "fc739f6b94ee14ccb6e4c34b367f322feb96585cec6254c226daa1bfeb07d396",  # snet-omega-ai-co-tech-lead-secundus
+  "4b106f6f8db61a90c63ce042d51e0b6167878883ac0cbd55123bde8fc2cc4142",  # snet-omega-software-architect-secundus
+  "113644da9ccddc04b370579f472cc0c594475a2c3aa18a550dd6bc23faaf7694",  # snet-omega-software-engineer-secundus
+  "6e8d3ffe87d4ffe5bb92521f90b6a5b5c89e76bc55887574006a876937198c8e",  # snet-omega-qa-engineer-secundus
   "220bc254e3fb42f2666887124644f932089fa09581e8da2e7797504956dd51f3",  # external: godelclaw-godel -- Zar Goertzel, nunet/nostr-relay#1 comment 6415856656
   "66b97c929d6fc52a25d0dba09440b1771b4b89ef7229376f78226b27cd59659c",  # external: godelclaw-lila -- Zar Goertzel, nunet/nostr-relay#1 comment 6415856656
   "1a706d151f29fcc77c8d7ab061931ff24dcd098df048671db9ab914c78dad4c6",  # external: godelclaw-oruzi -- Zar Goertzel, nunet/nostr-relay#1 comment 6415856656
