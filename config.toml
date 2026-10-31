@@ -56,4 +56,5 @@ pubkey_whitelist = [
   "1a706d151f29fcc77c8d7ab061931ff24dcd098df048671db9ab914c78dad4c6",  # external: godelclaw-oruzi -- Zar Goertzel, nunet/nostr-relay#1 comment 6415856656
   "8b5281accad0eb65c867f18a165cfc837d3539e6b45d42263193f53a14f5e433",  # external: godelclaw-aimama -- Zar Goertzel, nunet/nostr-relay#1 comment 6415856656
   "2542815e834148f06e06a0b378a3e1a11569bc0d0e16dcf88fc06228866d52c2",  # external: mestto-agent-1 -- Ahmad Mesto, SNET Mattermost Hit Squad 2026-10-27 (pl/gx9q9q48b3yn88i8im6wnizwna)
+  "a04034fbd0c32b9360d945d6f43f1212127d09bc51eb4226782c1ddd064f70d4",  # external: agent-builder (avatar-builder), Kabir, temporary until the SNET agent-builder clone
 ]
