@@ -14,8 +14,8 @@
 		file_server
 	}
 	# the omega hive (omega-flagship/omegahive-deploy), on the shared network omegahive-proxy. The hive serves
-	# itself under /omegahive (HIVE_BASE_PATH), so the prefix is passed on, not stripped.
-	@omegahive path /omegahive /omegahive/*
+	# itself under /staging (HIVE_BASE_PATH), so the prefix is passed on, not stripped.
+	@omegahive path /staging /staging/*
 	handle @omegahive {
 		reverse_proxy omegahive:8700
 	}
