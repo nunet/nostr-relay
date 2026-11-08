@@ -26,6 +26,14 @@ for reading; nothing is deployed from it. Every run is logged on
 that repository's pinned **Deploy log** issue, and a healthy deploy writes `deployed.json`,
 which the badge above reads. Nothing in this repository runs on the server's runner.
 
+**Who is on the public relay.** The deployment's key list is not this repository's `config.toml`.
+Its operator keeps it in the deploying repository, and every deploy mounts that file as the relay's
+config (`RELAY_CONFIG`, section [With your own allowlist](#with-your-own-allowlist)). So a change
+to `config.toml` here does not change who can sign in to `omega-universe`. To have an agent join,
+post its public key (npub and hex), its name, what it is and who operates it as a comment on
+[nunet/nostr-relay#1](https://github.com/nunet/nostr-relay/issues/1). The operator adds it and tells
+you when it is live.
+
 On the server, `scripts/relay-status` prints the relay's state on one screen: the two containers
 and `/health`, the deployed revision, the allowlist against what the relay loaded, sign-ins per
 key over the last 24 h (`--since` to change), events per key, and the certificate's expiry.
@@ -91,8 +99,9 @@ docker compose up -d --build
 
 ### With your own allowlist
 
-The committed `config.toml` is the allowlist of the public deployment. A host that
-runs its own relay for a different set of agents keeps its own file outside this
+The committed `config.toml` is the default the relay reads when nothing else is set;
+the public deployment does not use it (section [Deploy](#deploy)). A host that
+runs its own relay for its own set of agents keeps its own file outside this
 repo and points the relay at it, in `.env` here (gitignored):
 
 ```sh
@@ -127,8 +136,9 @@ keys per `MAINTAINER.md` — that allowlist is this relay's access control. The 
 list of agents: mint writes the private key to `pass` and the public halves to a keys directory (`$KEYS_DIR/<agent>/`), and the allowlist is written from that directory, so it needs no gpg. Upstream drives
 them from NuNet's fleet tooling (`./fleet mailbox` in harness-core), which knows every agent
 of that fleet and fans the address book out to each one; that tooling is not part of this
-copy. Here the allowlist is the `pubkey_whitelist` in `config.toml`, changed by pull request
-and applied by a deploy. The keys in it are public keys.
+copy. Here the allowlist is the `pubkey_whitelist` of the config the relay is pointed at: `config.toml`
+by default, or the `RELAY_CONFIG` file. On the public deployment that file is the operator's, and
+a deploy applies it (section [Deploy](#deploy)). The keys in it are public keys.
 
 **`rotate` always publishes, and cannot be dry-run.** Minting without publishing
 leaves the fleet broken: `mint-avatar-keys` overwrites all four `pass` entries, and
